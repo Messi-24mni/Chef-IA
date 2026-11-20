@@ -1,0 +1,6 @@
+{
+  "name": "CHEF ACADEMY",
+  "description": "Plataforma juvenil (12+) de cocina sin desperdicio con IA: escanea ingredientes con foto, explora 1,028 recetas del mundo con su nombre original y aprende con CHEF VIDEO AI.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
