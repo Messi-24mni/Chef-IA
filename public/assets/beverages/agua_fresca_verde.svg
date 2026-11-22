@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ECFDF5"/>
+      <stop offset="100%" stop-color="#E0F2FE"/>
+    </linearGradient>
+    <linearGradient id="drink" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#86EFAC"/>
+      <stop offset="60%" stop-color="#22C55E"/>
+      <stop offset="100%" stop-color="#15803D"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="600" fill="url(#bg)"/>
+  <ellipse cx="400" cy="510" rx="170" ry="24" fill="#CBD5E1" opacity="0.55"/>
+  <path d="M465 95 L435 120 L385 430" stroke="#0284C7" stroke-width="14" stroke-linecap="round" fill="none"/>
+  <path d="M295 160 L505 160 L478 490 Q476 508 456 508 L344 508 Q324 508 322 490 Z" fill="#FFFFFF" fill-opacity="0.55" stroke="#BAE6FD" stroke-width="6"/>
+  <path d="M306 225 L494 225 L472 486 Q470 498 455 498 L345 498 Q330 498 328 486 Z" fill="url(#drink)"/>
+  <ellipse cx="400" cy="225" rx="94" ry="12" fill="#BBF7D0" opacity="0.85"/>
+  <!-- Cucumber & lime slices inside -->
+  <circle cx="365" cy="340" r="32" fill="#166534" opacity="0.7"/>
+  <circle cx="365" cy="340" r="24" fill="#DCFCE7" opacity="0.8"/>
+  <rect x="398" y="250" width="46" height="46" rx="10" transform="rotate(14 421 273)" fill="#FFFFFF" fill-opacity="0.45"/>
+  <rect x="336" y="255" width="42" height="42" rx="10" transform="rotate(-12 357 276)" fill="#FFFFFF" fill-opacity="0.4"/>
+  <path d="M440 205 C450 165, 495 155, 505 185 C485 208, 458 212, 440 205 Z" fill="#15803D"/>
+  <path d="M430 212 C412 178, 435 142, 462 158 C462 185, 448 202, 430 212 Z" fill="#22C55E"/>
+  <path d="M318 185 L338 475" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round" opacity="0.45"/>
+</svg>

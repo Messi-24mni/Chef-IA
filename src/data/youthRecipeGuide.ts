@@ -248,6 +248,35 @@ export function getRecipeReadySignal(recipe: Recipe): string {
   const f = (recipe.family ?? "").toLowerCase();
   const t = recipe.title.toLowerCase();
 
+  if (
+    recipe.mealType === "Bebidas" ||
+    recipe.category === "Bebidas" ||
+    recipe.source === "bebidas" ||
+    recipe.source === "cafeteria"
+  ) {
+    if (/espresso|americano|café filtrado|prensa francesa|café de olla/.test(t) && !/frío|iced|cold|frappé|helado/.test(t)) {
+      return "El café tiene color intenso, aroma tostado fresco y crema ligera arriba; espera 1–2 minutos a que entibie antes de probar.";
+    }
+    if (/cappuccino|latte|flat white|moca|london fog|chai|leche dorada|chocolate caliente|cacao caliente|atole|chocolate con|chocolate especiado/.test(t) && !/frío|fría|iced|frappé/.test(t)) {
+      return "La leche está bien integrada con espuma suave arriba y los sabores o el chocolate se disolvieron por completo sin grumos.";
+    }
+    if (/frappé|malteada|smoothie|batido|licuado|lassi|chía|avena/.test(t)) {
+      return "La textura quedó completamente cremosa y pareja (o con hielo fino bien triturado en el frappé), sin grumos sin mezclar.";
+    }
+    if (
+      (f.includes("infusiones") ||
+        f.includes("cacao") ||
+        /sidra|ponche|tisana|té |infusión|manzanilla|tilo|menta|jengibre|earl grey/.test(t)) &&
+      !/hielo|frío|fría|helado/.test(t)
+    ) {
+      return "El líquido suelta aroma cálido, las flores o especias infusionaron parejo y la bebida está lista para tomar sin quemarse.";
+    }
+    if (f.includes("mocktail") || f.includes("gas") || /gas|burbuja|soda|mocktail|spritz|tonic/.test(t)) {
+      return "Las frutas o hierbas sueltan su aroma, se ven burbujas activas al servir y la bebida está bien fría.";
+    }
+    return "La bebida tiene color natural uniforme, los ingredientes están bien integrados y se sirve bien fría o con hielo.";
+  }
+
   if (f.includes("arroz") || /arroz|risotto|gohan|donburi|chahan|chao fan|pilaf|riz |paella|gallo pinto|baião|biryani|pulao|khichdi/.test(t)) {
     return "No queda agua suelta en el fondo de la olla y al probar un grano está blandito por completo (o con centro cremoso en el risotto).";
   }

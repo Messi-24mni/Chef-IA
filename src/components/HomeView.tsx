@@ -1,18 +1,16 @@
-import { useState } from "react";
 import {
   ArrowRight,
   Award,
   Camera,
-  CheckCircle2,
   ChefHat,
   Flame,
   Leaf,
   Sparkles,
+  Star,
   Trophy,
   UtensilsCrossed,
 } from "lucide-react";
 import { IMAGES } from "../data/curriculum";
-import { CULINARY_MISSIONS, DAILY_CHALLENGES } from "../data/recipes";
 import { useProgress } from "../context/ProgressContext";
 import type { TabId } from "../types/academy";
 import { SafeImage } from "./SafeImage";
@@ -27,21 +25,9 @@ export function HomeView({ onNavigate }: HomeViewProps) {
   const {
     state,
     rankTitle,
-    overallPercent,
-    completeChallenge,
+    cookedRecipesCount,
+    averageStarRating,
   } = useProgress();
-
-  const dailyChallenge = DAILY_CHALLENGES[0];
-  const [checkedItems, setCheckedItems] = useState<Record<number, boolean>>({});
-  const isDailyDone = state.completedChallengeIds.includes(dailyChallenge.id);
-  const allChecklistChecked = dailyChallenge.checklist.every((_, idx) => checkedItems[idx]);
-
-  const completedRetos = state.completedChallengeIds.length + state.completedMissionIds.length;
-  const totalRetos = DAILY_CHALLENGES.length + CULINARY_MISSIONS.length;
-
-  const toggleChecklist = (index: number) => {
-    setCheckedItems((prev) => ({ ...prev, [index]: !prev[index] }));
-  };
 
   return (
     <div className="space-y-10">
@@ -57,7 +43,7 @@ export function HomeView({ onNavigate }: HomeViewProps) {
                 Hola, {state.studentName || "Chef"}. Hoy cocinamos sin desperdiciar nada.
               </h1>
               <p className="text-sm sm:text-base text-slate-600 mt-3 max-w-xl leading-relaxed">
-                Toma foto a los ingredientes que tienes en casa para inventar recetas seguras, explora 1,028 platos del mundo con su nombre original y aprende con tu Profesor IA y Chef Video AI.
+                Toma foto a los ingredientes que tienes en casa para inventar recetas seguras, explora 2,028 recetas (incluidas 1,000 bebidas y opciones de cafetería) y aprende con tu Profesor IA y Chef Video AI.
               </p>
             </div>
 
@@ -82,7 +68,7 @@ export function HomeView({ onNavigate }: HomeViewProps) {
           <div className="lg:col-span-5 relative min-h-[220px] lg:min-h-full">
             <SafeImage
               src={IMAGES.hero}
-              alt="Estudio de cocina de CHEF ACADEMY Sin Desperdicio"
+              alt="Estudio de cocina de CHEF IA Sin Desperdicio"
               className="w-full h-full object-cover"
             />
             <div className="hidden lg:block absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-sky-50 to-transparent" />
@@ -116,14 +102,16 @@ export function HomeView({ onNavigate }: HomeViewProps) {
 
         <div className="rounded-2xl bg-white border border-sky-200 p-5">
           <div className="flex items-center justify-between text-slate-500 text-xs font-medium">
-            <span>Retos y exámenes</span>
-            <CheckCircle2 className="w-4 h-4 text-sky-600" />
+            <span>Recetas cocinadas</span>
+            <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
           </div>
           <p className="font-display text-2xl sm:text-3xl font-bold text-slate-950 mt-2 tabular-nums">
-            {completedRetos} / {totalRetos}
+            {cookedRecipesCount}
           </p>
-          <p className="text-xs text-slate-500 mt-1">
-            {overallPercent}% progreso · {state.unlockedBadgeIds.length} insignias
+          <p className="text-xs text-slate-500 mt-1 tabular-nums">
+            {cookedRecipesCount > 0
+              ? `Promedio: ${averageStarRating}/5 ★`
+              : "¡Haz tu 1.ª receta y puntúa ★!"}
           </p>
         </div>
 
@@ -182,74 +170,61 @@ export function HomeView({ onNavigate }: HomeViewProps) {
           </div>
         </div>
 
-        {/* Desafío del Día */}
+        {/* Sistema 5 Estrellas y Primera Receta */}
         <div className="lg:col-span-6 rounded-2xl bg-sky-50/90 border border-sky-200 p-6 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between gap-2 text-xs text-sky-800 font-semibold">
               <span className="inline-flex items-center gap-1.5">
                 <Award className="w-4 h-4 text-sky-600" />
-                Desafío del día
+                Sistema de 5 Estrellas
               </span>
-              <span className="tabular-nums text-sky-700">+{dailyChallenge.xpReward} XP</span>
+              <span className="tabular-nums text-amber-700 font-bold">
+                {cookedRecipesCount === 0 ? "+50 XP en tu 1.ª receta ★" : `${cookedRecipesCount} cocinada(s) · ${averageStarRating}/5 ★`}
+              </span>
             </div>
             <h2 className="font-display text-xl font-bold text-slate-950 mt-2">
-              {dailyChallenge.title}
+              {cookedRecipesCount === 0
+                ? "Prepara tu primera receta y califícala con 5 estrellas"
+                : "Sigue cocinando y puntuando tus platos favoritos"}
             </h2>
             <p className="text-sm text-slate-700 mt-1.5 leading-relaxed">
-              {dailyChallenge.description}
+              Cada vez que cocines una receta del recetario, de Sin desperdicio o de Chef IA, puedes marcarla como lista, puntuarla de 1 a 5 estrellas y guardar tus notas.
             </p>
 
-            <ul className="mt-4 space-y-2">
-              {dailyChallenge.checklist.map((item, idx) => {
-                const isChecked = isDailyDone || !!checkedItems[idx];
-                return (
-                  <li key={item}>
-                    <button
-                      type="button"
-                      disabled={isDailyDone}
-                      onClick={() => toggleChecklist(idx)}
-                      className={`w-full text-left flex items-center gap-3 px-3.5 py-2.5 rounded-xl border text-xs sm:text-sm transition-colors min-h-[44px] ${
-                        isChecked
-                          ? "bg-sky-200/70 border-sky-400 text-slate-950 font-medium"
-                          : "bg-white border-sky-200 text-slate-700 hover:bg-sky-100/60"
-                      }`}
-                    >
-                      <CheckCircle2
-                        className={`w-4 h-4 shrink-0 ${
-                          isChecked ? "text-sky-700" : "text-slate-400"
-                        }`}
-                      />
-                      <span>{item}</span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
+            <div className="mt-4 rounded-xl bg-white border border-sky-200 p-4 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-1">
+                {([1, 2, 3, 4, 5] as const).map((s) => (
+                  <Star
+                    key={s}
+                    className={`w-5 h-5 ${
+                      cookedRecipesCount > 0 && s <= Math.round(averageStarRating)
+                        ? "text-amber-400 fill-amber-400"
+                        : "text-amber-400 fill-amber-100"
+                    }`}
+                  />
+                ))}
+              </div>
+              <span className="text-xs font-semibold text-slate-700">
+                {cookedRecipesCount === 0
+                  ? "Bono de bienvenida: Insignia Primera Receta ★"
+                  : `Promedio actual: ${averageStarRating}/5 estrellas`}
+              </span>
+            </div>
           </div>
 
           <div className="mt-5 flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-sky-200/80">
             <button
-              onClick={() => onNavigate("desafios")}
+              onClick={() => onNavigate("perfil")}
               className="text-xs font-semibold text-sky-800 hover:text-sky-950 underline underline-offset-4"
             >
-              Ver todos los exámenes y retos
+              Ver mis recetas calificadas
             </button>
             <button
-              disabled={isDailyDone || !allChecklistChecked}
-              onClick={() => completeChallenge(dailyChallenge.id, dailyChallenge.xpReward)}
-              className={`px-4 py-2.5 rounded-xl text-xs font-semibold transition-colors min-h-[44px] ${
-                isDailyDone
-                  ? "bg-emerald-100 text-emerald-900 border border-emerald-300 cursor-default"
-                  : allChecklistChecked
-                  ? "bg-sky-600 hover:bg-sky-700 text-white"
-                  : "bg-sky-200/60 text-slate-500 cursor-not-allowed"
-              }`}
+              onClick={() => onNavigate("recetario")}
+              className="px-4 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-semibold inline-flex items-center gap-1.5 transition-colors min-h-[44px]"
             >
-              {isDailyDone
-                ? "Desafío completado hoy"
-                : allChecklistChecked
-                ? `Reclamar +${dailyChallenge.xpReward} XP`
-                : "Marca la lista para completar"}
+              Elegir una receta ahora
+              <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
@@ -299,7 +274,7 @@ export function HomeView({ onNavigate }: HomeViewProps) {
                 Recetario Internacional
               </h3>
               <p className="text-xs sm:text-sm text-slate-600 mt-1.5 leading-relaxed">
-                Más de 1,000 recetas con fotos, nombre original por país, explicación para 12+ y video tutorial IA.
+                2,028 recetas con fotos realistas (incluyendo 1,000 bebidas sin alcohol y de cafetería), explicación para 12+ y video tutorial IA.
               </p>
             </div>
             <span className="text-xs font-semibold text-sky-700 inline-flex items-center gap-1">
@@ -309,22 +284,22 @@ export function HomeView({ onNavigate }: HomeViewProps) {
 
           <button
             type="button"
-            onClick={() => onNavigate("desafios")}
+            onClick={() => onNavigate("chef-ia")}
             className="text-left rounded-2xl bg-white border border-sky-200 p-6 hover:-translate-y-0.5 transition-transform shadow-sm flex flex-col justify-between gap-4"
           >
             <div>
               <div className="w-10 h-10 rounded-xl bg-sky-50 border border-sky-200 flex items-center justify-center">
-                <Trophy className="w-5 h-5 text-sky-700" />
+                <Sparkles className="w-5 h-5 text-sky-700" />
               </div>
               <h3 className="font-display text-lg font-bold text-slate-950 mt-4">
-                Desafíos y Exámenes
+                Chef Mentor IA y Video
               </h3>
               <p className="text-xs sm:text-sm text-slate-600 mt-1.5 leading-relaxed">
-                Pon a prueba tus habilidades, gana XP, desbloquea medallas y obtén tus certificados oficiales.
+                Resuelve dudas paso a paso con explicaciones claras, crea recetas con tus ingredientes y mira videos guiados.
               </p>
             </div>
             <span className="text-xs font-semibold text-sky-700 inline-flex items-center gap-1">
-              Ir a desafíos <ArrowRight className="w-3.5 h-3.5" />
+              Hablar con Chef IA <ArrowRight className="w-3.5 h-3.5" />
             </span>
           </button>
         </div>

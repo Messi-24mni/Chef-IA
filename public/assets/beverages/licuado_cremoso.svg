@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FEF3C7"/>
+      <stop offset="100%" stop-color="#E0F2FE"/>
+    </linearGradient>
+    <linearGradient id="milk" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFFBEB"/>
+      <stop offset="65%" stop-color="#FDE68A"/>
+      <stop offset="100%" stop-color="#F59E0B"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="600" fill="url(#bg)"/>
+  <ellipse cx="400" cy="512" rx="165" ry="22" fill="#CBD5E1" opacity="0.55"/>
+  <path d="M465 95 L435 120 L390 420" stroke="#0284C7" stroke-width="14" stroke-linecap="round" fill="none"/>
+  <path d="M300 175 L500 175 L475 492 Q473 508 455 508 L345 508 Q327 508 325 492 Z" fill="#FFFFFF" fill-opacity="0.65" stroke="#BAE6FD" stroke-width="6"/>
+  <path d="M308 220 L492 220 L470 486 Q468 498 452 498 L348 498 Q332 498 330 486 Z" fill="url(#milk)"/>
+  <!-- Creamy whipped foam -->
+  <path d="M312 222 Q345 182 400 185 Q455 182 488 222 Z" fill="#FFFFFF"/>
+  <ellipse cx="400" cy="182" rx="45" ry="22" fill="#FFFFFF"/>
+  <!-- Banana slice & cinnamon dust -->
+  <circle cx="348" cy="192" r="24" fill="#FEF08A" stroke="#FACC15" stroke-width="4"/>
+  <circle cx="405" cy="176" r="3" fill="#92400E"/>
+  <circle cx="422" cy="185" r="3" fill="#92400E"/>
+  <circle cx="390" cy="188" r="2.5" fill="#92400E"/>
+  <path d="M322 195 L342 475" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round" opacity="0.5"/>
+</svg>

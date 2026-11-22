@@ -11,6 +11,7 @@ import {
   RefreshCw,
   ShieldAlert,
   Sparkles,
+  Star,
   Trash2,
   Upload,
   Users,
@@ -22,6 +23,7 @@ import { getDishImageForText } from "../data/curriculum";
 import { useProgress } from "../context/ProgressContext";
 import type { Recipe, ZeroWasteAnalysisResult } from "../types/academy";
 import { ChefVideoModal } from "./ChefVideoModal";
+import { RecipeRatingModal } from "./RecipeRatingModal";
 import { SafeImage } from "./SafeImage";
 
 interface CapturedPhoto {
@@ -215,7 +217,7 @@ async function resizeImageFileToJpeg(file: File): Promise<CapturedPhoto> {
 }
 
 export function ZeroWasteView() {
-  const { state, rankTitle, recordZeroWasteRescue } = useProgress();
+  const { state, rankTitle, cookedRecipesCount, recordZeroWasteRescue, rateCookedRecipe } = useProgress();
   const [photos, setPhotos] = useState<CapturedPhoto[]>([]);
   const [extraInput, setExtraInput] = useState("");
   const [extraIngredients, setExtraIngredients] = useState<string[]>([]);
@@ -234,6 +236,7 @@ export function ZeroWasteView() {
   const [analysis, setAnalysis] = useState<ZeroWasteAnalysisResult | null>(null);
   const [rescueClaimed, setRescueClaimed] = useState(false);
   const [videoRecipe, setVideoRecipe] = useState<Recipe | null>(null);
+  const [ratingModalOpen, setRatingModalOpen] = useState(false);
 
   // Tricks library filter
   const [trickCategory, setTrickCategory] = useState<TrickCategory>("Todos");
@@ -771,6 +774,7 @@ export function ZeroWasteView() {
                     onClick={() => {
                       setRescueClaimed(true);
                       recordZeroWasteRescue(generatedRecipeObj.title, 40);
+                      setRatingModalOpen(true);
                     }}
                     className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold inline-flex items-center gap-2 transition-colors min-h-[44px] ${
                       rescueClaimed
@@ -781,6 +785,28 @@ export function ZeroWasteView() {
                     <CheckCircle2 className="w-4 h-4" />
                     {rescueClaimed ? "¡Rescate registrado! (+40 XP)" : "¡Ya la cociné sin desperdicio! (+40 XP)"}
                   </button>
+
+                  {state.recipeRatings?.[generatedRecipeObj.id] ? (
+                    <button
+                      type="button"
+                      onClick={() => setRatingModalOpen(true)}
+                      className="px-3.5 py-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-950 text-xs font-semibold inline-flex items-center gap-1.5 min-h-[44px]"
+                    >
+                      <Star className="w-4 h-4 text-amber-500 fill-amber-400" />
+                      <span className="tabular-nums">{state.recipeRatings[generatedRecipeObj.id].stars}/5 ★ (Editar)</span>
+                    </button>
+                  ) : (
+                    rescueClaimed && (
+                      <button
+                        type="button"
+                        onClick={() => setRatingModalOpen(true)}
+                        className="px-3.5 py-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-950 text-xs font-semibold inline-flex items-center gap-1.5 min-h-[44px]"
+                      >
+                        <Star className="w-4 h-4 text-amber-500" />
+                        Calificar con estrellas
+                      </button>
+                    )
+                  )}
                 </div>
               </div>
             </div>
@@ -951,6 +977,27 @@ export function ZeroWasteView() {
 
       {videoRecipe && (
         <ChefVideoModal recipe={videoRecipe} onClose={() => setVideoRecipe(null)} />
+      )}
+
+      {ratingModalOpen && generatedRecipeObj && (
+        <RecipeRatingModal
+          recipe={generatedRecipeObj}
+          existingRating={state.recipeRatings?.[generatedRecipeObj.id]}
+          isFirstRecipeEver={cookedRecipesCount === 0}
+          skipBaseXp={rescueClaimed}
+          onSubmit={(stars, note) => {
+            rateCookedRecipe({
+              recipeId: generatedRecipeObj.id,
+              recipeTitle: generatedRecipeObj.title,
+              recipeImage: generatedRecipeObj.image,
+              stars,
+              note,
+              skipBaseXp: rescueClaimed,
+            });
+            setRatingModalOpen(false);
+          }}
+          onClose={() => setRatingModalOpen(false)}
+        />
       )}
     </div>
   );

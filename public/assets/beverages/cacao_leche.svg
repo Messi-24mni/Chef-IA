@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FEF3C7"/>
+      <stop offset="100%" stop-color="#E0F2FE"/>
+    </linearGradient>
+    <linearGradient id="cocoa" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#78350F"/>
+      <stop offset="100%" stop-color="#451A03"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="600" fill="url(#bg)"/>
+  <path d="M355 180 Q340 140 360 105" stroke="#94A3B8" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.5"/>
+  <path d="M415 170 Q400 130 420 95" stroke="#94A3B8" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.5"/>
+  <ellipse cx="400" cy="490" rx="195" ry="26" fill="#CBD5E1" opacity="0.55"/>
+  <path d="M512 275 C585 275, 585 405, 502 410" stroke="#0284C7" stroke-width="24" stroke-linecap="round" fill="none"/>
+  <path d="M275 235 L525 235 L505 455 Q500 482 465 482 L335 482 Q300 482 295 455 Z" fill="#FFFFFF" stroke="#BAE6FD" stroke-width="6"/>
+  <ellipse cx="400" cy="238" rx="125" ry="26" fill="#F8FAFC" stroke="#BAE6FD" stroke-width="4"/>
+  <ellipse cx="400" cy="242" rx="112" ry="20" fill="url(#cocoa)"/>
+  <!-- Foam & cinnamon stick -->
+  <ellipse cx="385" cy="240" rx="58" ry="12" fill="#FFFBEB" opacity="0.9"/>
+  <rect x="422" y="178" width="18" height="75" rx="6" transform="rotate(24 431 215)" fill="#9A3412"/>
+  <circle cx="380" cy="240" r="3" fill="#78350F"/>
+  <circle cx="395" cy="238" r="2.5" fill="#78350F"/>
+  <circle cx="368" cy="243" r="2.5" fill="#78350F"/>
+</svg>

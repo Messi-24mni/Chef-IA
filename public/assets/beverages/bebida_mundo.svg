@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FEF9C3"/>
+      <stop offset="100%" stop-color="#E0F2FE"/>
+    </linearGradient>
+    <linearGradient id="horchata" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFFBEB"/>
+      <stop offset="65%" stop-color="#FEF3C7"/>
+      <stop offset="100%" stop-color="#FDE68A"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="600" fill="url(#bg)"/>
+  <ellipse cx="400" cy="512" rx="165" ry="22" fill="#CBD5E1" opacity="0.55"/>
+  <!-- Cinnamon stick -->
+  <rect x="435" y="110" width="22" height="190" rx="8" transform="rotate(14 446 205)" fill="#9A3412"/>
+  <path d="M300 175 L500 175 L475 492 Q473 508 455 508 L345 508 Q327 508 325 492 Z" fill="#FFFFFF" fill-opacity="0.7" stroke="#BAE6FD" stroke-width="6"/>
+  <path d="M308 220 L492 220 L470 486 Q468 498 452 498 L348 498 Q332 498 330 486 Z" fill="url(#horchata)"/>
+  <ellipse cx="400" cy="220" rx="92" ry="14" fill="#FFFFFF"/>
+  <rect x="336" y="242" width="44" height="44" rx="10" transform="rotate(-10 358 264)" fill="#FFFFFF" fill-opacity="0.55" stroke="#E2E8F0" stroke-width="2"/>
+  <rect x="398" y="255" width="44" height="44" rx="10" transform="rotate(12 420 277)" fill="#FFFFFF" fill-opacity="0.5" stroke="#E2E8F0" stroke-width="2"/>
+  <!-- Cinnamon dust & lime garnish -->
+  <circle cx="385" cy="218" r="3" fill="#9A3412"/>
+  <circle cx="405" cy="215" r="3" fill="#9A3412"/>
+  <circle cx="418" cy="222" r="2.5" fill="#9A3412"/>
+  <circle cx="298" cy="175" r="42" fill="#16A34A"/>
+  <circle cx="298" cy="175" r="34" fill="#DCFCE7"/>
+  <circle cx="298" cy="175" r="27" fill="#4ADE80"/>
+  <path d="M322 195 L342 475" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round" opacity="0.5"/>
+</svg>

@@ -467,7 +467,7 @@ export const COURSE_LEVELS: CourseLevel[] = [
       "Desarrolla criterio de chef profesional: organización de brigada, emplatado de restaurante, balance de cinco sabores, cocina internacional y diseño de tus propias recetas.",
     requiredXp: 580,
     image: IMAGES.nivel4,
-    certificateTitle: "Diploma Superior de Chef Academy — Cocina Avanzada",
+    certificateTitle: "Diploma Superior de CHEF IA — Cocina Avanzada",
     examPassScore: 4,
     examXpReward: 220,
     examQuestions: [
@@ -2218,7 +2218,7 @@ export const LESSONS: Lesson[] = [
     image: IMAGES.hero,
     summary: "Diseña tu propia receta original usando la fórmula de chef: base + proteína + salsa + contraste + seguridad.",
     simpleExplanation:
-      "Graduarte de Chef Academy significa dejar de copiar recetas a ciegas y empezar a crear las tuyas. Usa nuestra matriz de diseño culinario para inventar platos equilibrados y seguros.",
+      "Graduarte de CHEF IA significa dejar de copiar recetas a ciegas y empezar a crear las tuyas. Usa nuestra matriz de diseño culinario para inventar platos equilibrados y seguros.",
     ingredients: [
       "1 base energética (arroz, pasta, papa o tortilla)",
       "1 proteína o vegetal protagonista",

@@ -1,4 +1,4 @@
-export type TabId = "inicio" | "sin-desperdicio" | "recetario" | "desafios" | "chef-ia" | "perfil";
+export type TabId = "inicio" | "sin-desperdicio" | "recetario" | "chef-ia" | "perfil";
 
 export type LevelNumber = 1 | 2 | 3 | 4;
 
@@ -55,14 +55,21 @@ export interface CourseLevel {
   examXpReward: number;
 }
 
-export type MealType = "Desayuno" | "Almuerzo" | "Cena" | "Postre" | "Antojo";
+export type MealType = "Desayuno" | "Almuerzo" | "Cena" | "Postre" | "Antojo" | "Bebidas";
 
 export interface Recipe {
   id: string;
   title: string;
   mealType: MealType;
-  category: "Desayunos" | "Pastas y Salsas" | "Platos Fuertes" | "Internacional" | "Repostería" | "Saludable";
-  source?: "academia" | "pdf";
+  category:
+    | "Desayunos"
+    | "Pastas y Salsas"
+    | "Platos Fuertes"
+    | "Internacional"
+    | "Repostería"
+    | "Saludable"
+    | "Bebidas";
+  source?: "academia" | "pdf" | "bebidas" | "cafeteria";
   pdfNumber?: number;
   country?: string;
   countryFlavors?: string;
@@ -81,25 +88,6 @@ export interface Recipe {
   safetyNote: string;
 }
 
-export interface DailyChallenge {
-  id: string;
-  title: string;
-  description: string;
-  levelLabel: string;
-  xpReward: number;
-  checklist: string[];
-  safetyReminder: string;
-}
-
-export interface CulinaryMission {
-  id: string;
-  title: string;
-  levelNumber: LevelNumber;
-  description: string;
-  xpReward: number;
-  stepsToVerify: string[];
-  safetyReminder: string;
-}
 
 export interface Badge {
   id: string;
@@ -107,6 +95,15 @@ export interface Badge {
   description: string;
   tier: "bronce" | "plata" | "oro";
   criteriaLabel: string;
+}
+
+export interface CookedRecipeRating {
+  recipeId: string;
+  recipeTitle: string;
+  recipeImage?: string;
+  stars: 1 | 2 | 3 | 4 | 5;
+  note?: string;
+  ratedAt: string;
 }
 
 export interface StudentProgressState {
@@ -126,6 +123,7 @@ export interface StudentProgressState {
   savedRecipeIds: string[];
   unlockedBadgeIds: string[];
   zeroWasteCount?: number;
+  recipeRatings?: Record<string, CookedRecipeRating>;
 }
 
 export type VideoDurationOption = "1min" | "3min" | "6min";
@@ -165,6 +163,7 @@ export interface ChefVideoTutorial {
   ttsModel: string;
   totalEstimatedSeconds: number;
   foodSafetyReminder: string;
+  progressiveAudio?: boolean;
   scenes: ChefVideoScene[];
 }
 

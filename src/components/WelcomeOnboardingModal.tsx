@@ -40,17 +40,17 @@ export function WelcomeOnboardingModal() {
         <div className="md:col-span-5 relative min-h-[180px] md:min-h-full bg-sky-100">
           <SafeImage
             src={IMAGES.hero}
-            alt="Cocina de CHEF ACADEMY"
+            alt="Cocina de CHEF IA"
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-sky-950/85 via-sky-950/35 to-transparent" />
           <div className="absolute bottom-4 left-4 right-4">
             <div className="flex items-center gap-2 text-sky-200 text-xs font-semibold">
               <ChefHat className="w-4 h-4 text-sky-300" />
-              <span>CHEF ACADEMY · Sin Desperdicio</span>
+              <span>CHEF IA · Sin Desperdicio</span>
             </div>
             <p className="text-xs text-white/95 mt-1 leading-relaxed">
-              Toma foto a tus ingredientes para no desperdiciar nada, cocina 1,028 platos del mundo y aprende con Chef Video AI.
+              Toma foto a tus ingredientes para no desperdiciar nada, prepara 2,028 recetas y bebidas sin alcohol, y aprende con Chef Video AI.
             </p>
           </div>
         </div>
@@ -64,7 +64,7 @@ export function WelcomeOnboardingModal() {
                 Crea tu perfil de chef
               </h1>
               <p className="text-xs sm:text-sm text-slate-600 mt-1.5 leading-relaxed">
-                Dinos cómo te llamas para personalizar tus recetas, guardar tu progreso y emitir tus certificados.
+                Dinos cómo te llamas para personalizar tus recetas, guardar tu progreso y calificar tus platos con 5 estrellas.
               </p>
             </div>
 

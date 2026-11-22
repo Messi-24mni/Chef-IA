@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FFEDD5"/>
+      <stop offset="100%" stop-color="#E0F2FE"/>
+    </linearGradient>
+    <linearGradient id="juice" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FDBA74"/>
+      <stop offset="50%" stop-color="#F97316"/>
+      <stop offset="100%" stop-color="#C2410C"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="600" fill="url(#bg)"/>
+  <ellipse cx="400" cy="510" rx="165" ry="22" fill="#CBD5E1" opacity="0.55"/>
+  <path d="M310 180 L490 180 L470 492 Q468 508 450 508 L350 508 Q332 508 330 492 Z" fill="#FFFFFF" fill-opacity="0.55" stroke="#BAE6FD" stroke-width="6"/>
+  <path d="M318 228 L482 228 L464 486 Q462 498 448 498 L352 498 Q338 498 336 486 Z" fill="url(#juice)"/>
+  <ellipse cx="400" cy="228" rx="82" ry="11" fill="#FED7AA"/>
+  <!-- Orange slice garnish -->
+  <circle cx="485" cy="182" r="44" fill="#EA580C"/>
+  <circle cx="485" cy="182" r="36" fill="#FFEDD5"/>
+  <circle cx="485" cy="182" r="29" fill="#FB923C"/>
+  <!-- Fresh whole orange beside glass -->
+  <circle cx="245" cy="465" r="56" fill="#F97316"/>
+  <circle cx="232" cy="445" r="14" fill="#FDBA74" opacity="0.5"/>
+  <path d="M245 408 C258 386, 285 385, 290 402 C275 415, 258 415, 245 408 Z" fill="#16A34A"/>
+  <path d="M332 200 L348 475" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round" opacity="0.45"/>
+</svg>

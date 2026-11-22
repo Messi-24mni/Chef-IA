@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { COURSE_LEVELS } from "../data/curriculum";
-import { BADGES, CULINARY_MISSIONS, DAILY_CHALLENGES } from "../data/recipes";
-import type { LevelNumber, StudentProgressState } from "../types/academy";
+import { BADGES } from "../data/recipes";
+import type { CookedRecipeRating, StudentProgressState } from "../types/academy";
 
 const STORAGE_KEY = "chef_academy_progress_v1";
 
@@ -26,6 +25,7 @@ const DEFAULT_STATE: StudentProgressState = {
   savedRecipeIds: ["rec-huevos-cremosos"],
   unlockedBadgeIds: [],
   zeroWasteCount: 0,
+  recipeRatings: {},
 };
 
 export interface RewardToast {
@@ -38,17 +38,19 @@ interface ProgressContextValue {
   state: StudentProgressState;
   rankTitle: string;
   overallPercent: number;
-  isLevelUnlocked: (level: LevelNumber) => boolean;
-  getLevelProgress: (level: LevelNumber) => { completed: number; total: number; percent: number };
-  isLevelCertified: (level: LevelNumber) => boolean;
+  cookedRecipesCount: number;
+  averageStarRating: number;
   completeOnboarding: (studentName: string, favoriteCuisine?: string) => void;
   updateProfile: (updates: Partial<Pick<StudentProgressState, "studentName" | "favoriteCuisine" | "allergies">>) => void;
-  setLastLesson: (lessonId: string) => void;
-  completeLesson: (lessonId: string, xpReward: number) => void;
-  completeChallenge: (challengeId: string, xpReward: number) => void;
-  completeMission: (missionId: string, xpReward: number) => void;
   recordZeroWasteRescue: (recipeTitle: string, xpReward?: number) => void;
-  recordExamResult: (level: LevelNumber, score: number, total: number, passScore: number, xpReward: number) => boolean;
+  rateCookedRecipe: (params: {
+    recipeId: string;
+    recipeTitle: string;
+    recipeImage?: string;
+    stars: 1 | 2 | 3 | 4 | 5;
+    note?: string;
+    skipBaseXp?: boolean;
+  }) => void;
   toggleSaveRecipe: (recipeId: string) => void;
   resetProgress: () => void;
   activeToast: RewardToast | null;
@@ -67,27 +69,25 @@ function computeRank(xp: number): string {
 
 function evaluateBadges(next: StudentProgressState): string[] {
   const earned = new Set(next.unlockedBadgeIds);
-  if (
-    next.completedChallengeIds.length >= 1 ||
-    next.completedMissionIds.length >= 1 ||
-    (next.zeroWasteCount ?? 0) >= 1
-  ) {
+  const ratedCount = Object.keys(next.recipeRatings ?? {}).length;
+  const zeroWaste = next.zeroWasteCount ?? 0;
+  if (zeroWaste >= 1 || ratedCount >= 1) {
     earned.add("badge-primer-paso");
   }
-  if (
-    next.completedChallengeIds.includes("chal-mise-en-place") ||
-    next.completedMissionIds.includes("mis-higiene-estacion")
-  ) {
+  if (ratedCount >= 1) {
+    earned.add("badge-primera-receta");
+  }
+  if (next.allergies.length >= 1 || ratedCount + zeroWaste >= 2) {
     earned.add("badge-guardian-seguro");
   }
-  if (next.completedChallengeIds.length >= 1 || next.completedMissionIds.length >= 1) {
+  if (zeroWaste >= 2) {
     earned.add("badge-racha-3");
   }
   if (next.savedRecipeIds.length >= 2) earned.add("badge-coleccionista");
-  if (next.passedExamLevels.includes(1)) earned.add("badge-graduado-1");
-  if (next.passedExamLevels.includes(2)) earned.add("badge-graduado-2");
-  if (next.passedExamLevels.includes(3)) earned.add("badge-graduado-3");
-  if (next.passedExamLevels.includes(4)) earned.add("badge-chef-oro");
+  if (ratedCount >= 3) earned.add("badge-graduado-1");
+  if (next.xp >= 250) earned.add("badge-graduado-2");
+  if (ratedCount >= 5) earned.add("badge-graduado-3");
+  if (next.xp >= 500) earned.add("badge-chef-oro");
   return Array.from(earned);
 }
 
@@ -111,7 +111,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
         }
         const hasProgress =
           (parsed.xp ?? 0) > 0 ||
-          (parsed.completedChallengeIds?.length ?? 0) > 0 ||
+          Object.keys(parsed.recipeRatings ?? {}).length > 0 ||
           (parsed.zeroWasteCount ?? 0) > 0;
         const hasName = Boolean(parsed.studentName && parsed.studentName.trim().length > 0);
         return {
@@ -151,38 +151,22 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
 
   const rankTitle = useMemo(() => computeRank(state.xp), [state.xp]);
 
+  const { cookedRecipesCount, averageStarRating } = useMemo(() => {
+    const ratings = Object.values(state.recipeRatings ?? {});
+    if (ratings.length === 0) {
+      return { cookedRecipesCount: 0, averageStarRating: 0 };
+    }
+    const sum = ratings.reduce((acc, r) => acc + r.stars, 0);
+    return {
+      cookedRecipesCount: ratings.length,
+      averageStarRating: Number((sum / ratings.length).toFixed(1)),
+    };
+  }, [state.recipeRatings]);
+
   const overallPercent = useMemo(() => {
-    const totalItems = COURSE_LEVELS.length + DAILY_CHALLENGES.length + CULINARY_MISSIONS.length;
-    const doneItems =
-      state.passedExamLevels.length +
-      state.completedChallengeIds.length +
-      state.completedMissionIds.length;
-    return totalItems === 0 ? 0 : Math.min(100, Math.round((doneItems / totalItems) * 100));
-  }, [
-    state.completedChallengeIds.length,
-    state.completedMissionIds.length,
-    state.passedExamLevels.length,
-  ]);
-
-  const isLevelUnlocked = (level: LevelNumber): boolean => {
-    if (level === 1) return true;
-    const lvlInfo = COURSE_LEVELS.find((l) => l.levelNumber === level);
-    if (!lvlInfo) return false;
-    const prevLevel = (level - 1) as LevelNumber;
-    return state.xp >= lvlInfo.requiredXp || state.passedExamLevels.includes(prevLevel);
-  };
-
-  const getLevelProgress = (level: LevelNumber) => {
-    const missionsInLevel = CULINARY_MISSIONS.filter((m) => m.levelNumber === level);
-    const completed = missionsInLevel.filter((m) => state.completedMissionIds.includes(m.id)).length;
-    const total = missionsInLevel.length;
-    const percent = total === 0 ? (state.passedExamLevels.includes(level) ? 100 : 0) : Math.round((completed / total) * 100);
-    return { completed, total, percent };
-  };
-
-  const isLevelCertified = (level: LevelNumber) => {
-    return state.passedExamLevels.includes(level);
-  };
+    if (BADGES.length === 0) return 0;
+    return Math.min(100, Math.round((state.unlockedBadgeIds.length / BADGES.length) * 100));
+  }, [state.unlockedBadgeIds.length]);
 
   const applyWithBadgeCheck = (
     updater: (prev: StudentProgressState) => StudentProgressState,
@@ -216,67 +200,20 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
       favoriteCuisine: favoriteCuisine?.trim() || prev.favoriteCuisine,
       hasCompletedOnboarding: true,
     }));
-    showToast(`¡Bienvenido/a, ${cleanName}!`, "Tu perfil de estudiante fue guardado en CHEF ACADEMY.");
+    showToast(`¡Bienvenido/a, ${cleanName}!`, "Tu perfil de estudiante fue guardado en CHEF IA.");
   };
 
   const updateProfile = (
     updates: Partial<Pick<StudentProgressState, "studentName" | "favoriteCuisine" | "allergies">>
   ) => {
-    setState((prev) => ({
-      ...prev,
-      ...updates,
-      hasCompletedOnboarding: true,
-    }));
-    showToast("Perfil actualizado", "Tus preferencias y alérgenos han sido guardados.");
-  };
-
-  const setLastLesson = (lessonId: string) => {
-    setState((prev) => (prev.lastLessonId === lessonId ? prev : { ...prev, lastLessonId: lessonId }));
-  };
-
-  const completeLesson = (lessonId: string, xpReward: number) => {
-    if (state.completedLessonIds.includes(lessonId)) return;
     applyWithBadgeCheck(
       (prev) => ({
         ...prev,
-        xp: prev.xp + xpReward,
-        lastLessonId: lessonId,
-        completedLessonIds: [...prev.completedLessonIds, lessonId],
+        ...updates,
+        hasCompletedOnboarding: true,
       }),
-      `+${xpReward} XP ganados`,
-      "Actividad completada"
-    );
-  };
-
-  const completeChallenge = (challengeId: string, xpReward: number) => {
-    if (state.completedChallengeIds.includes(challengeId)) {
-      showToast("Desafío completado", "Ya registraste este desafío anteriormente.");
-      return;
-    }
-    applyWithBadgeCheck(
-      (prev) => ({
-        ...prev,
-        xp: prev.xp + xpReward,
-        completedChallengeIds: [...prev.completedChallengeIds, challengeId],
-      }),
-      `+${xpReward} XP ganados`,
-      "Desafío del día superado"
-    );
-  };
-
-  const completeMission = (missionId: string, xpReward: number) => {
-    if (state.completedMissionIds.includes(missionId)) {
-      showToast("Misión ya completada", "Sigue explorando nuevas misiones culinarias.");
-      return;
-    }
-    applyWithBadgeCheck(
-      (prev) => ({
-        ...prev,
-        xp: prev.xp + xpReward,
-        completedMissionIds: [...prev.completedMissionIds, missionId],
-      }),
-      `+${xpReward} XP ganados`,
-      "Misión culinaria completada"
+      "Perfil actualizado",
+      "Tus preferencias y alérgenos han sido guardados."
     );
   };
 
@@ -292,39 +229,65 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     );
   };
 
-  const recordExamResult = (
-    level: LevelNumber,
-    score: number,
-    total: number,
-    passScore: number,
-    xpReward: number
-  ): boolean => {
-    const passed = score >= passScore;
-    const alreadyPassed = state.passedExamLevels.includes(level);
-    const earnedXp = passed && !alreadyPassed ? xpReward : 0;
+  const rateCookedRecipe = ({
+    recipeId,
+    recipeTitle,
+    recipeImage,
+    stars,
+    note,
+    skipBaseXp = false,
+  }: {
+    recipeId: string;
+    recipeTitle: string;
+    recipeImage?: string;
+    stars: 1 | 2 | 3 | 4 | 5;
+    note?: string;
+    skipBaseXp?: boolean;
+  }) => {
+    const existingRatings = state.recipeRatings ?? {};
+    const alreadyRatedThisRecipe = Boolean(existingRatings[recipeId]);
+    const isVeryFirstRecipe = Object.keys(existingRatings).length === 0;
+    const xpReward = alreadyRatedThisRecipe
+      ? 0
+      : (skipBaseXp ? 0 : 35) + (isVeryFirstRecipe ? 15 : 0);
+
+    const entry: CookedRecipeRating = {
+      recipeId,
+      recipeTitle,
+      recipeImage,
+      stars,
+      note: note?.trim() || undefined,
+      ratedAt: new Date().toISOString(),
+    };
+
+    const toastTitle = alreadyRatedThisRecipe
+      ? `Calificación actualizada (${stars} ★)`
+      : isVeryFirstRecipe
+        ? `¡Tu primera receta! +${xpReward} XP (${stars} ★)`
+        : xpReward > 0
+          ? `+${xpReward} XP · Calificada con ${stars} ★`
+          : `¡Receta calificada con ${stars} ★!`;
+
+    const toastSubtitle = alreadyRatedThisRecipe
+      ? `Actualizaste tu puntuación para "${recipeTitle}"`
+      : isVeryFirstRecipe
+        ? `Celebramos tu primera receta cocinada: "${recipeTitle}"`
+        : `"${recipeTitle}" guardada en tus recetas cocinadas`;
 
     applyWithBadgeCheck(
       (prev) => ({
         ...prev,
-        xp: prev.xp + earnedXp,
-        examScores: {
-          ...prev.examScores,
-          [level]: Math.max(prev.examScores[level] ?? 0, Math.round((score / total) * 100)),
+        xp: prev.xp + xpReward,
+        recipeRatings: {
+          ...(prev.recipeRatings ?? {}),
+          [recipeId]: entry,
         },
-        passedExamLevels:
-          passed && !prev.passedExamLevels.includes(level)
-            ? [...prev.passedExamLevels, level]
-            : prev.passedExamLevels,
       }),
-      passed ? `¡Examen Nivel ${level} aprobado!` : `Resultado: ${score}/${total}`,
-      passed
-        ? earnedXp > 0
-          ? `+${earnedXp} XP y certificado desbloqueado`
-          : "Certificación confirmada"
-        : `Necesitas ${passScore}/${total} para aprobar. Intenta de nuevo.`
+      toastTitle,
+      toastSubtitle
     );
-    return passed;
   };
+
 
   const toggleSaveRecipe = (recipeId: string) => {
     setState((prev) => {
@@ -348,17 +311,12 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
         state,
         rankTitle,
         overallPercent,
-        isLevelUnlocked,
-        getLevelProgress,
-        isLevelCertified,
+        cookedRecipesCount,
+        averageStarRating,
         completeOnboarding,
         updateProfile,
-        setLastLesson,
-        completeLesson,
-        completeChallenge,
-        completeMission,
         recordZeroWasteRescue,
-        recordExamResult,
+        rateCookedRecipe,
         toggleSaveRecipe,
         resetProgress,
         activeToast,

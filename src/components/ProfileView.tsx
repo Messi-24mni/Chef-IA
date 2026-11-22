@@ -1,22 +1,16 @@
 import { useEffect, useState } from "react";
 import {
-  Award,
-  CheckCircle2,
   Flame,
+  Leaf,
   Medal,
   RotateCcw,
   ShieldAlert,
-  Trophy,
+  Star,
   User,
 } from "lucide-react";
-import { COURSE_LEVELS } from "../data/curriculum";
-import { BADGES, CULINARY_MISSIONS, DAILY_CHALLENGES } from "../data/recipes";
+import { BADGES } from "../data/recipes";
 import { useProgress } from "../context/ProgressContext";
-import type { LevelNumber } from "../types/academy";
-
-interface ProfileViewProps {
-  onOpenCertificate: (level: LevelNumber) => void;
-}
+import { SafeImage } from "./SafeImage";
 
 const COMMON_ALLERGIES = [
   "Gluten / Trigo",
@@ -28,12 +22,13 @@ const COMMON_ALLERGIES = [
   "Pescado / Mariscos",
 ];
 
-export function ProfileView({ onOpenCertificate }: ProfileViewProps) {
+export function ProfileView() {
   const {
     state,
     rankTitle,
     overallPercent,
-    isLevelCertified,
+    cookedRecipesCount,
+    averageStarRating,
     updateProfile,
     resetProgress,
   } = useProgress();
@@ -54,10 +49,6 @@ export function ProfileView({ onOpenCertificate }: ProfileViewProps) {
       : [...state.allergies, allergy];
     updateProfile({ allergies: next });
   };
-
-  const completedRetosCount =
-    state.completedChallengeIds.length + state.completedMissionIds.length;
-  const totalRetosCount = DAILY_CHALLENGES.length + CULINARY_MISSIONS.length;
 
   return (
     <div className="space-y-8">
@@ -85,13 +76,13 @@ export function ProfileView({ onOpenCertificate }: ProfileViewProps) {
               <p className="font-display text-xl font-bold text-slate-950 tabular-nums">{state.xp} XP</p>
             </div>
             <div>
-              <p className="text-xs text-slate-500">Exámenes</p>
+              <p className="text-xs text-slate-500">Cocinadas</p>
               <p className="font-display text-xl font-bold text-slate-950 tabular-nums">
-                {state.passedExamLevels.length}/4
+                {cookedRecipesCount}
               </p>
             </div>
             <div>
-              <p className="text-xs text-slate-500">Progreso</p>
+              <p className="text-xs text-slate-500">Insignias</p>
               <p className="font-display text-xl font-bold text-sky-600 tabular-nums">
                 {overallPercent}%
               </p>
@@ -99,11 +90,18 @@ export function ProfileView({ onOpenCertificate }: ProfileViewProps) {
           </div>
         </div>
 
-        <div className="mt-6 pt-5 border-t border-sky-100 grid sm:grid-cols-3 gap-4 text-xs text-slate-600">
+        <div className="mt-6 pt-5 border-t border-sky-100 grid sm:grid-cols-4 gap-4 text-xs text-slate-600">
           <div className="flex items-center gap-2">
-            <Trophy className="w-4 h-4 text-sky-600" />
+            <Leaf className="w-4 h-4 text-emerald-600" />
             <span className="tabular-nums">
-              {completedRetosCount} de {totalRetosCount} retos y misiones · {state.zeroWasteCount ?? 0} sin desperdicio
+              {state.zeroWasteCount ?? 0} rescates sin desperdicio
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
+            <span className="tabular-nums">
+              {cookedRecipesCount} {cookedRecipesCount === 1 ? "receta cocinada" : "recetas cocinadas"}
+              {cookedRecipesCount > 0 ? ` (${averageStarRating}/5 ★)` : ""}
             </span>
           </div>
           <div className="flex items-center gap-2">
@@ -138,7 +136,7 @@ export function ProfileView({ onOpenCertificate }: ProfileViewProps) {
           >
             <div>
               <label htmlFor="student-name" className="block text-xs font-semibold text-slate-700 mb-1">
-                Nombre del estudiante (aparece en tus certificados)
+                Nombre del estudiante
               </label>
               <input
                 id="student-name"
@@ -240,57 +238,70 @@ export function ProfileView({ onOpenCertificate }: ProfileViewProps) {
         </div>
       </section>
 
-      {/* Certificados Oficiales */}
+
+      {/* Mis recetas cocinadas y calificadas */}
       <section className="space-y-4">
-        <h2 className="font-display text-xl sm:text-2xl font-bold text-slate-950">
-          Certificados Oficiales
-        </h2>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {COURSE_LEVELS.map((lvl) => {
-            const certified = isLevelCertified(lvl.levelNumber);
-            const passedExam = state.passedExamLevels.includes(lvl.levelNumber);
-
-            return (
-              <div
-                key={lvl.levelNumber}
-                className="rounded-2xl bg-white border border-sky-200 p-5 flex flex-col justify-between gap-4"
-              >
-                <div>
-                  <div className="flex items-center justify-between text-xs text-slate-500">
-                    <span className="font-semibold text-sky-700">Nivel {lvl.levelNumber}</span>
-                    <span className="tabular-nums">
-                      {passedExam ? `${state.examScores[lvl.levelNumber] ?? 100}%` : "Pendiente"}
-                    </span>
-                  </div>
-                  <h3 className="font-display text-base font-bold text-slate-950 mt-1.5">
-                    {lvl.certificateTitle}
-                  </h3>
-                  <p className="text-xs text-slate-600 mt-1.5">
-                    {certified
-                      ? "Listo para imprimir o guardar"
-                      : `Aprueba el Examen Nivel ${lvl.levelNumber} en Desafíos para obtenerlo.`}
-                  </p>
-                </div>
-
-                {certified ? (
-                  <button
-                    type="button"
-                    onClick={() => onOpenCertificate(lvl.levelNumber)}
-                    className="w-full py-2.5 rounded-xl bg-sky-200 hover:bg-sky-300 text-sky-950 text-xs font-bold inline-flex items-center justify-center gap-1.5 min-h-[40px]"
-                  >
-                    <Award className="w-4 h-4" />
-                    Abrir certificado
-                  </button>
-                ) : (
-                  <div className="text-xs text-slate-500 flex items-center gap-1.5 pt-2 border-t border-sky-100">
-                    <CheckCircle2 className="w-4 h-4 text-slate-400" />
-                    <span>Pendiente examen</span>
-                  </div>
-                )}
-              </div>
-            );
-          })}
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h2 className="font-display text-xl sm:text-2xl font-bold text-slate-950 flex items-center gap-2">
+            <Star className="w-5 h-5 text-amber-400 fill-amber-400" />
+            Mis Recetas Calificadas (5 Estrellas)
+          </h2>
+          {cookedRecipesCount > 0 && (
+            <span className="text-xs font-semibold text-amber-800 tabular-nums">
+              Promedio general: {averageStarRating} / 5 ★
+            </span>
+          )}
         </div>
+
+        {cookedRecipesCount === 0 ? (
+          <div className="rounded-2xl bg-white border border-sky-200 p-6 text-sm text-slate-600">
+            Aún no has calificado ninguna receta. Prepara tu primer plato desde <strong>Sin desperdicio</strong> o el <strong>Recetario</strong> y presiona <strong>“¡Ya la cociné! (Puntuar ★)”</strong> para ganar tu insignia <strong>Primera Receta ★</strong>.
+          </div>
+        ) : (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {Object.values(state.recipeRatings ?? {})
+              .sort((a, b) => b.ratedAt.localeCompare(a.ratedAt))
+              .map((entry) => (
+                <article
+                  key={entry.recipeId}
+                  className="rounded-2xl bg-white border border-sky-200 p-4 flex items-start gap-3.5 shadow-sm"
+                >
+                  {entry.recipeImage && (
+                    <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 border border-sky-100">
+                      <SafeImage
+                        src={entry.recipeImage}
+                        alt={entry.recipeTitle}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-display text-sm font-bold text-slate-950 line-clamp-2">
+                      {entry.recipeTitle}
+                    </h3>
+                    <div className="flex items-center gap-0.5 mt-1.5">
+                      {([1, 2, 3, 4, 5] as const).map((s) => (
+                        <Star
+                          key={s}
+                          className={`w-4 h-4 ${
+                            s <= entry.stars ? "text-amber-400 fill-amber-400" : "text-slate-200"
+                          }`}
+                        />
+                      ))}
+                      <span className="text-xs font-bold text-amber-800 ml-1.5 tabular-nums">
+                        {entry.stars}/5
+                      </span>
+                    </div>
+                    {entry.note && (
+                      <p className="text-xs text-slate-600 mt-1.5 line-clamp-2 italic">
+                        “{entry.note}”
+                      </p>
+                    )}
+                  </div>
+                </article>
+              ))}
+          </div>
+        )}
       </section>
 
       {/* Reset progress control */}

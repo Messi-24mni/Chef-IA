@@ -1,4 +1,4 @@
-import type { Badge, CulinaryMission, DailyChallenge, Recipe } from "../types/academy";
+import type { Badge, Recipe } from "../types/academy";
 import { DISH_IMAGES } from "./curriculum";
 
 export const RECIPES: Recipe[] = [
@@ -834,115 +834,34 @@ export const RECIPES: Recipe[] = [
   },
 ];
 
-export const DAILY_CHALLENGES: DailyChallenge[] = [
-  {
-    id: "chal-mise-en-place",
-    title: "Desafío del Día: Operación Mise en Place",
-    description:
-      "Antes de preparar tu merienda o cena hoy, organiza todos los ingredientes medidos y utensilios en tu mesa con un tazón aparte para desechos.",
-    levelLabel: "Apto para todos los niveles",
-    xpReward: 50,
-    checklist: [
-      "Lavé mis manos 20 segundos con agua y jabón",
-      "Aseguré la tabla de cortar con paño húmedo debajo",
-      "Medí todos los ingredientes antes de encender el fuego",
-      "Revisé posibles alergias de quienes van a comer",
-    ],
-    safetyReminder: "Recuerda pedir supervisión adulta si tu preparación incluye cuchillos afilados o estufa.",
-  },
-  {
-    id: "chal-vinagreta",
-    title: "Desafío de Emulsión 3:1",
-    description:
-      "Prepara una vinagreta equilibrada en frasco usando 3 partes de aceite por 1 de limón y comprueba cómo se mantienen unidas las gotas.",
-    levelLabel: "Nivel 1+",
-    xpReward: 55,
-    checklist: [
-      "Medí exactamente 3 cucharadas de aceite y 1 de limón",
-      "Agregué media cucharadita de mostaza o miel como emulsionante",
-      "Agité el frasco cerrado durante 15 segundos",
-      "Sequé las hojas de ensalada antes de aderezar",
-    ],
-    safetyReminder: "Usa un frasco limpio y prueba siempre con una cuchara distinta.",
-  },
-];
-
-export const CULINARY_MISSIONS: CulinaryMission[] = [
-  {
-    id: "mis-higiene-estacion",
-    title: "Misión 1: Auditor de Higiene y Seguridad",
-    levelNumber: 1,
-    description: "Prepara tu cocina aplicando separación de tablas, lavado de manos de 20s y mangos hacia adentro.",
-    xpReward: 60,
-    stepsToVerify: [
-      "Confirmé dos áreas separadas (crudos vs. listos para comer)",
-      "Giré los mangos de ollas y sartenes hacia el interior de la estufa",
-      "Recogí mi cabello y me lavé las manos 20 segundos",
-    ],
-    safetyReminder: "La seguridad preventiva es la habilidad número 1 de cualquier chef profesional.",
-  },
-  {
-    id: "mis-arroz-suelto",
-    title: "Misión 2: Maestro del Arroz 2:1",
-    levelNumber: 1,
-    description: "Prepara 1 taza de arroz siguiendo lavado previo, tapa cerrada por 15 minutos y reposo de 5 minutos.",
-    xpReward: 80,
-    stepsToVerify: [
-      "Lavé el arroz hasta aclarar el agua",
-      "Respeté los 15 minutos sin levantar la tapa",
-      "Abrí la tapa inclinando el vapor lejos de mi rostro con un adulto",
-    ],
-    safetyReminder: "Supervisión adulta obligatoria al manejar vapor y hornillas.",
-  },
-  {
-    id: "mis-pasta-al-dente",
-    title: "Misión 3: Emulsión Pasta al Dente",
-    levelNumber: 2,
-    description: "Cocina pasta sin aceite en el agua y liga tu salsa con media taza del agua de cocción.",
-    xpReward: 95,
-    stepsToVerify: [
-      "Salé el agua hirviendo sin añadir aceite",
-      "Reservé agua de cocción antes de colar con ayuda de un adulto",
-      "Terminé la pasta 1 minuto mezclada dentro de la sartén con salsa",
-    ],
-    safetyReminder: "Nunca traslades ni cueles ollas de agua hirviendo sin apoyo de un adulto.",
-  },
-  {
-    id: "mis-emplatado-dorado",
-    title: "Misión 4: Emplatado Regla de Impares",
-    levelNumber: 4,
-    description: "Presenta una comida cotidiana aplicando altura, limpieza de bordes, contraste de color y 3 puntos de guarnición.",
-    xpReward: 120,
-    stepsToVerify: [
-      "Dejé al menos un 30% del borde del plato libre y limpio",
-      "Incluí un elemento crujiente o verde fresco al final",
-      "Anoté los alérgenos del plato antes de servirlo",
-    ],
-    safetyReminder: "Lávate las manos antes de manipular guarniciones frescas finales.",
-  },
-];
-
 export const BADGES: Badge[] = [
   {
     id: "badge-primer-paso",
     title: "Primer Paso en Cocina",
-    description: "Completaste tu primer reto, misión o receta sin desperdicio en CHEF ACADEMY.",
+    description: "Preparaste tu primera receta o rescate sin desperdicio en CHEF IA.",
     tier: "bronce",
-    criteriaLabel: "1 reto, misión o rescate completado",
+    criteriaLabel: "1 receta o rescate completado",
+  },
+  {
+    id: "badge-primera-receta",
+    title: "Primera Receta ★",
+    description: "Preparaste tu primera receta y la calificaste con nuestro sistema de 5 estrellas.",
+    tier: "plata",
+    criteriaLabel: "Cocinar y calificar tu 1.ª receta",
   },
   {
     id: "badge-guardian-seguro",
     title: "Guardián de Seguridad",
-    description: "Dominaste higiene, preparación ordenada y prevención de accidentes.",
+    description: "Configuraste tus alérgenos o completaste 2 preparaciones seguras en casa.",
     tier: "bronce",
-    criteriaLabel: "Completar Desafío Mise en Place",
+    criteriaLabel: "Configurar alergias o 2 recetas",
   },
   {
     id: "badge-racha-3",
-    title: "Constancia Culinaria",
-    description: "Completaste un desafío diario o misión práctica en casa.",
+    title: "Eco Chef Sin Desperdicio",
+    description: "Rescataste ingredientes de tu nevera para cocinar sin desperdiciar comida.",
     tier: "plata",
-    criteriaLabel: "1 desafío o misión completada",
+    criteriaLabel: "2 rescates sin desperdicio",
   },
   {
     id: "badge-coleccionista",
@@ -953,30 +872,30 @@ export const BADGES: Badge[] = [
   },
   {
     id: "badge-graduado-1",
-    title: "Graduado Nivel 1",
-    description: "Aprobaste el examen final de Principiante con excelencia.",
+    title: "Crítico 5 Estrellas",
+    description: "Cocinaste y calificaste 3 recetas distintas con el sistema de 5 estrellas.",
     tier: "plata",
-    criteriaLabel: "Aprobar Examen Nivel 1",
+    criteriaLabel: "Calificar 3 recetas",
   },
   {
     id: "badge-graduado-2",
-    title: "Maestro de Cocina Básica",
-    description: "Superaste el Nivel 2 dominando pastas, salsas, sopas y carnes.",
+    title: "Maestro Culinario",
+    description: "Alcanzaste 250 XP cocinando platos del mundo y aprovechando ingredientes.",
     tier: "plata",
-    criteriaLabel: "Aprobar Examen Nivel 2",
+    criteriaLabel: "Alcanzar 250 XP",
   },
   {
     id: "badge-graduado-3",
-    title: "Artista Intermedio",
-    description: "Dominaste masas, horneado y cocinas del mundo.",
+    title: "Explorador Mundial",
+    description: "Cocinaste y calificaste 5 recetas internacionales en casa.",
     tier: "oro",
-    criteriaLabel: "Aprobar Examen Nivel 3",
+    criteriaLabel: "Calificar 5 recetas",
   },
   {
     id: "badge-chef-oro",
-    title: "Chef Certificado de Academia",
-    description: "Alcanzaste el rango máximo completando el Examen de Nivel 4.",
+    title: "Chef IA Oro",
+    description: "Alcanzaste el rango máximo acumulando 500 XP en CHEF IA.",
     tier: "oro",
-    criteriaLabel: "Aprobar Examen Nivel 4",
+    criteriaLabel: "Alcanzar 500 XP",
   },
 ];

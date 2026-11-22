@@ -8,6 +8,7 @@ import {
   Clock,
   Coffee,
   Cookie,
+  CupSoda,
   FileDown,
   Globe,
   Moon,
@@ -15,6 +16,7 @@ import {
   Search,
   ShieldAlert,
   Sparkles,
+  Star,
   Sun,
   Users,
   Utensils,
@@ -22,19 +24,25 @@ import {
   Video,
   X,
 } from "lucide-react";
-import { ALL_RECIPES, INTERNATIONAL_COUNTRIES } from "../data/internationalRecipes";
+import {
+  ALL_RECIPES,
+  BEVERAGE_CATEGORIES,
+  CAFETERIA_CATEGORIES,
+  INTERNATIONAL_COUNTRIES,
+} from "../data/internationalRecipes";
 import { getRecipeReadySignal, getYouthGlossaryForRecipe } from "../data/youthRecipeGuide";
 import { useProgress } from "../context/ProgressContext";
 import type { MealType, Recipe } from "../types/academy";
 import { ChefVideoModal } from "./ChefVideoModal";
+import { RecipeRatingModal } from "./RecipeRatingModal";
 import { SafeImage } from "./SafeImage";
 
 interface RecipeBookViewProps {
   onAskTutor: (prompt: string) => void;
 }
 
-type MealFilter = "Todas" | MealType | "Guardadas";
-type SourceFilter = "todas" | "academia" | "pdf";
+type MealFilter = "Todas" | MealType | "Guardadas" | "Cocinadas";
+type SourceFilter = "todas" | "academia" | "pdf" | "bebidas" | "cafeteria";
 
 const DIFFICULTIES = ["Todas", "Principiante", "Básico", "Intermedio", "Avanzado"] as const;
 const PAGE_SIZE = 24;
@@ -53,19 +61,23 @@ const MEAL_TABS: Array<{ id: MealFilter; label: string; icon: typeof Sun }> = [
   { id: "Cena", label: "Cena", icon: Moon },
   { id: "Postre", label: "Postre", icon: Sparkles },
   { id: "Antojo", label: "Antojo", icon: Cookie },
+  { id: "Bebidas", label: "Bebidas", icon: CupSoda },
   { id: "Guardadas", label: "Guardadas", icon: Bookmark },
+  { id: "Cocinadas", label: "Cocinadas", icon: Star },
 ];
 
 export function RecipeBookView({ onAskTutor }: RecipeBookViewProps) {
-  const { state, toggleSaveRecipe } = useProgress();
+  const { state, cookedRecipesCount, toggleSaveRecipe, rateCookedRecipe } = useProgress();
   const [search, setSearch] = useState("");
   const [mealFilter, setMealFilter] = useState<MealFilter>("Todas");
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>("todas");
   const [countryFilter, setCountryFilter] = useState<string>("Todos");
+  const [beverageCategoryFilter, setBeverageCategoryFilter] = useState<string>("Todas");
   const [difficulty, setDifficulty] = useState<(typeof DIFFICULTIES)[number]>("Todas");
   const [page, setPage] = useState(1);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [videoRecipe, setVideoRecipe] = useState<Recipe | null>(null);
+  const [ratingRecipe, setRatingRecipe] = useState<Recipe | null>(null);
   const [cachedVideoIds, setCachedVideoIds] = useState<Set<string>>(new Set());
   const [servingMultiplier, setServingMultiplier] = useState<1 | 2 | 4>(1);
   const gridTopRef = useRef<HTMLDivElement>(null);
@@ -96,6 +108,9 @@ export function RecipeBookView({ onAskTutor }: RecipeBookViewProps) {
     });
   }, []);
 
+  const isBeverageMode =
+    mealFilter === "Bebidas" || sourceFilter === "bebidas" || sourceFilter === "cafeteria";
+
   const mealCounts = useMemo(() => {
     const counts: Record<MealFilter, number> = {
       Todas: 0,
@@ -104,20 +119,32 @@ export function RecipeBookView({ onAskTutor }: RecipeBookViewProps) {
       Cena: 0,
       Postre: 0,
       Antojo: 0,
+      Bebidas: 0,
       Guardadas: 0,
+      Cocinadas: 0,
     };
     for (const r of ALL_RECIPES) {
       if (sourceFilter !== "todas" && r.source !== sourceFilter) continue;
       if (countryFilter !== "Todos" && r.country !== countryFilter) continue;
+      if (
+        beverageCategoryFilter !== "Todas" &&
+        (r.source === "bebidas" || r.source === "cafeteria") &&
+        r.family !== beverageCategoryFilter
+      ) {
+        continue;
+      }
       if (difficulty !== "Todas" && r.difficulty !== difficulty) continue;
       counts.Todas += 1;
       counts[r.mealType] += 1;
       if (state.savedRecipeIds.includes(r.id)) {
         counts.Guardadas += 1;
       }
+      if (state.recipeRatings?.[r.id]) {
+        counts.Cocinadas += 1;
+      }
     }
     return counts;
-  }, [countryFilter, difficulty, sourceFilter, state.savedRecipeIds]);
+  }, [beverageCategoryFilter, countryFilter, difficulty, sourceFilter, state.recipeRatings, state.savedRecipeIds]);
 
   const filteredRecipes = useMemo(() => {
     const rawQ = search.trim();
@@ -125,20 +152,29 @@ export function RecipeBookView({ onAskTutor }: RecipeBookViewProps) {
     return ALL_RECIPES.filter((r) => {
       if (sourceFilter !== "todas" && r.source !== sourceFilter) return false;
       if (countryFilter !== "Todos" && r.country !== countryFilter) return false;
+      if (beverageCategoryFilter !== "Todas" && r.family !== beverageCategoryFilter) return false;
       if (difficulty !== "Todas" && r.difficulty !== difficulty) return false;
       if (mealFilter === "Guardadas" && !state.savedRecipeIds.includes(r.id)) return false;
-      if (mealFilter !== "Todas" && mealFilter !== "Guardadas" && r.mealType !== mealFilter) return false;
+      if (mealFilter === "Cocinadas" && !state.recipeRatings?.[r.id]) return false;
+      if (
+        mealFilter !== "Todas" &&
+        mealFilter !== "Guardadas" &&
+        mealFilter !== "Cocinadas" &&
+        r.mealType !== mealFilter
+      ) {
+        return false;
+      }
       if (!qNorm) return true;
 
       if (r.pdfNumber && String(r.pdfNumber) === qNorm) return true;
       const haystack = normalizeText(
-        `${r.title} ${r.country ?? ""} ${r.family ?? ""} ${r.mealType} ${r.description} ${r.ingredients
+        `${r.title} ${r.country ?? ""} ${r.countryFlavors ?? ""} ${r.family ?? ""} ${r.mealType} ${r.description} ${r.ingredients
           .map((i) => i.item)
           .join(" ")}`
       );
       return haystack.includes(qNorm);
     });
-  }, [countryFilter, difficulty, mealFilter, search, sourceFilter, state.savedRecipeIds]);
+  }, [beverageCategoryFilter, countryFilter, difficulty, mealFilter, search, sourceFilter, state.recipeRatings, state.savedRecipeIds]);
 
   const totalPages = Math.max(1, Math.ceil(filteredRecipes.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
@@ -158,6 +194,7 @@ export function RecipeBookView({ onAskTutor }: RecipeBookViewProps) {
     setMealFilter("Todas");
     setSourceFilter("todas");
     setCountryFilter("Todos");
+    setBeverageCategoryFilter("Todas");
     setDifficulty("Todas");
     setPage(1);
   };
@@ -179,12 +216,12 @@ export function RecipeBookView({ onAskTutor }: RecipeBookViewProps) {
             Recetario Internacional
           </h1>
           <p className="text-sm text-slate-600 mt-2 max-w-2xl">
-            Explora las recetas paso a paso de la Academia junto con las 1,000 recetas de 10 cocinas del mundo, clasificadas por desayuno, almuerzo, cena, postre o antojo.
+            Explora las recetas de la Academia, las 1,000 recetas de 10 cocinas del mundo y el apartado especial de Bebidas con 500 bebidas sin alcohol y 500 de cafetería.
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full lg:w-auto">
-          <div className="relative flex-1 sm:w-80">
+        <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2.5 w-full lg:w-auto">
+          <div className="relative flex-1 sm:w-72">
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="search"
@@ -193,7 +230,7 @@ export function RecipeBookView({ onAskTutor }: RecipeBookViewProps) {
                 setSearch(e.target.value);
                 setPage(1);
               }}
-              placeholder="Buscar receta, ingrediente, país o #..."
+              placeholder="Buscar receta, bebida, café, ingrediente o #..."
               aria-label="Buscar recetas"
               className="w-full pl-10 pr-9 py-2.5 rounded-xl bg-white border border-sky-200 text-sm text-slate-950 placeholder:text-slate-400 focus:outline-none focus:border-sky-500 min-h-[44px]"
             />
@@ -220,6 +257,24 @@ export function RecipeBookView({ onAskTutor }: RecipeBookViewProps) {
             <FileDown className="w-4 h-4 text-sky-600" />
             PDF 1000 recetas
           </a>
+
+          <a
+            href="/assets/aistudio/500_bebidas_sin_alcohol_c4a47d4b.pdf"
+            download="500_Bebidas_Sin_Alcohol.pdf"
+            className="px-3.5 py-2.5 rounded-xl bg-sky-50 border border-sky-200 hover:bg-sky-100 text-xs font-semibold text-sky-900 inline-flex items-center justify-center gap-2 min-h-[44px] shrink-0 transition-colors"
+          >
+            <CupSoda className="w-4 h-4 text-sky-600" />
+            PDF 500 bebidas
+          </a>
+
+          <a
+            href="/assets/aistudio/500_bebidas_de_cafeteria__1__ee3875d7.pdf"
+            download="500_Bebidas_De_Cafeteria.pdf"
+            className="px-3.5 py-2.5 rounded-xl bg-sky-50 border border-sky-200 hover:bg-sky-100 text-xs font-semibold text-sky-900 inline-flex items-center justify-center gap-2 min-h-[44px] shrink-0 transition-colors"
+          >
+            <Coffee className="w-4 h-4 text-sky-600" />
+            PDF 500 cafetería
+          </a>
         </div>
       </div>
 
@@ -236,6 +291,22 @@ export function RecipeBookView({ onAskTutor }: RecipeBookViewProps) {
                 type="button"
                 onClick={() => {
                   setMealFilter(tab.id);
+                  if (tab.id === "Bebidas") {
+                    setCountryFilter("Todos");
+                    if (sourceFilter === "academia" || sourceFilter === "pdf") {
+                      setSourceFilter("todas");
+                    }
+                  } else {
+                    setBeverageCategoryFilter("Todas");
+                    if (
+                      tab.id !== "Todas" &&
+                      tab.id !== "Guardadas" &&
+                      tab.id !== "Cocinadas" &&
+                      (sourceFilter === "bebidas" || sourceFilter === "cafeteria")
+                    ) {
+                      setSourceFilter("todas");
+                    }
+                  }
                   setPage(1);
                 }}
                 className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition-colors whitespace-nowrap shrink-0 min-h-[42px] inline-flex items-center gap-2 tabular-nums ${
@@ -254,15 +325,17 @@ export function RecipeBookView({ onAskTutor }: RecipeBookViewProps) {
           })}
         </div>
 
-        {/* Secondary filters: Collection, Country, Difficulty + Results count */}
+        {/* Secondary filters: Collection, Country / Beverage Category, Difficulty + Results count */}
         <div className="rounded-2xl bg-white border border-sky-200 p-3.5 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2.5">
-            <div className="inline-flex rounded-xl bg-sky-50 border border-sky-200 p-1">
+            <div className="inline-flex flex-wrap rounded-xl bg-sky-50 border border-sky-200 p-1 gap-0.5">
               {(
                 [
-                  { id: "todas", label: "Todas (1028)" },
+                  { id: "todas", label: `Todas (${ALL_RECIPES.length})` },
                   { id: "academia", label: "Academia (28)" },
                   { id: "pdf", label: "1000 Mundiales" },
+                  { id: "bebidas", label: "Bebidas (500)" },
+                  { id: "cafeteria", label: "Cafetería (500)" },
                 ] as const
               ).map((src) => {
                 const active = sourceFilter === src.id;
@@ -272,7 +345,20 @@ export function RecipeBookView({ onAskTutor }: RecipeBookViewProps) {
                     type="button"
                     onClick={() => {
                       setSourceFilter(src.id);
-                      if (src.id === "academia") setCountryFilter("Todos");
+                      if (src.id === "academia") {
+                        setCountryFilter("Todos");
+                        setBeverageCategoryFilter("Todas");
+                        if (mealFilter === "Bebidas") setMealFilter("Todas");
+                      } else if (src.id === "pdf") {
+                        setBeverageCategoryFilter("Todas");
+                        if (mealFilter === "Bebidas") setMealFilter("Todas");
+                      } else if (src.id === "bebidas" || src.id === "cafeteria") {
+                        setCountryFilter("Todos");
+                        setBeverageCategoryFilter("Todas");
+                        setMealFilter("Bebidas");
+                      } else if (src.id === "todas") {
+                        if (mealFilter !== "Bebidas") setBeverageCategoryFilter("Todas");
+                      }
                       setPage(1);
                     }}
                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors min-h-[34px] ${
@@ -285,28 +371,69 @@ export function RecipeBookView({ onAskTutor }: RecipeBookViewProps) {
               })}
             </div>
 
-            <label className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600">
-              <Globe className="w-3.5 h-3.5 text-sky-600" />
-              <select
-                value={countryFilter}
-                onChange={(e) => {
-                  setCountryFilter(e.target.value);
-                  if (e.target.value !== "Todos" && sourceFilter === "academia") {
-                    setSourceFilter("todas");
-                  }
-                  setPage(1);
-                }}
-                aria-label="Filtrar por país"
-                className="px-3 py-1.5 rounded-xl bg-sky-50/70 border border-sky-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-sky-500 min-h-[38px]"
-              >
-                <option value="Todos">Todos los países (10)</option>
-                {INTERNATIONAL_COUNTRIES.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
+            {isBeverageMode ? (
+              <label className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600">
+                <CupSoda className="w-3.5 h-3.5 text-sky-600" />
+                <select
+                  value={beverageCategoryFilter}
+                  onChange={(e) => {
+                    setBeverageCategoryFilter(e.target.value);
+                    setPage(1);
+                  }}
+                  aria-label="Filtrar por categoría de bebida"
+                  className="px-3 py-1.5 rounded-xl bg-sky-50/70 border border-sky-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-sky-500 min-h-[38px]"
+                >
+                  <option value="Todas">
+                    {sourceFilter === "bebidas"
+                      ? "Todas las bebidas sin alcohol (10 categorías)"
+                      : sourceFilter === "cafeteria"
+                        ? "Todas las bebidas de cafetería (10 categorías)"
+                        : "Todas las bebidas (20 categorías)"}
                   </option>
-                ))}
-              </select>
-            </label>
+                  {sourceFilter !== "cafeteria" && (
+                    <optgroup label="Bebidas sin alcohol (500)">
+                      {BEVERAGE_CATEGORIES.map((cat) => (
+                        <option key={`beb-${cat}`} value={cat}>
+                          {cat} (50)
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+                  {sourceFilter !== "bebidas" && (
+                    <optgroup label="Bebidas de cafetería (500)">
+                      {CAFETERIA_CATEGORIES.map((cat) => (
+                        <option key={`cafe-${cat}`} value={cat}>
+                          {cat} (50)
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+                </select>
+              </label>
+            ) : (
+              <label className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600">
+                <Globe className="w-3.5 h-3.5 text-sky-600" />
+                <select
+                  value={countryFilter}
+                  onChange={(e) => {
+                    setCountryFilter(e.target.value);
+                    if (e.target.value !== "Todos" && sourceFilter === "academia") {
+                      setSourceFilter("todas");
+                    }
+                    setPage(1);
+                  }}
+                  aria-label="Filtrar por país"
+                  className="px-3 py-1.5 rounded-xl bg-sky-50/70 border border-sky-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-sky-500 min-h-[38px]"
+                >
+                  <option value="Todos">Todos los países (10)</option>
+                  {INTERNATIONAL_COUNTRIES.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
 
             <label className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600">
               <span>Nivel:</span>
@@ -337,6 +464,7 @@ export function RecipeBookView({ onAskTutor }: RecipeBookViewProps) {
               mealFilter !== "Todas" ||
               sourceFilter !== "todas" ||
               countryFilter !== "Todos" ||
+              beverageCategoryFilter !== "Todas" ||
               difficulty !== "Todas") && (
               <button
                 type="button"
@@ -429,6 +557,27 @@ export function RecipeBookView({ onAskTutor }: RecipeBookViewProps) {
                       <p className="text-xs text-sky-900 bg-sky-50 border border-sky-200 rounded-lg px-2.5 py-1.5 mt-3 line-clamp-1">
                         Alérgenos: {recipe.allergens.join(", ")}
                       </p>
+
+                      {state.recipeRatings?.[recipe.id] && (
+                        <div className="mt-2.5 flex items-center justify-between gap-2 rounded-lg bg-amber-50 border border-amber-200 px-2.5 py-1.5 text-xs">
+                          <span className="inline-flex items-center gap-1 font-semibold text-amber-900">
+                            <span className="inline-flex items-center gap-0.5">
+                              {([1, 2, 3, 4, 5] as const).map((s) => (
+                                <Star
+                                  key={s}
+                                  className={`w-3.5 h-3.5 ${
+                                    s <= state.recipeRatings![recipe.id].stars
+                                      ? "text-amber-400 fill-amber-400"
+                                      : "text-amber-200"
+                                  }`}
+                                />
+                              ))}
+                            </span>
+                            <span className="ml-1 tabular-nums">{state.recipeRatings[recipe.id].stars}/5</span>
+                          </span>
+                          <span className="text-[11px] font-semibold text-amber-800">Ya la cociné</span>
+                        </div>
+                      )}
 
                       {cachedVideoIds.has(recipe.id) && (
                         <p className="text-[11px] font-semibold text-emerald-700 inline-flex items-center gap-1 mt-2">
@@ -702,6 +851,25 @@ export function RecipeBookView({ onAskTutor }: RecipeBookViewProps) {
 
                 <button
                   type="button"
+                  onClick={() => setRatingRecipe(selectedRecipe)}
+                  className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold inline-flex items-center gap-2 min-h-[44px] border transition-colors ${
+                    state.recipeRatings?.[selectedRecipe.id]
+                      ? "bg-amber-50 hover:bg-amber-100 border-amber-300 text-amber-950"
+                      : "bg-emerald-600 hover:bg-emerald-700 border-emerald-600 text-white"
+                  }`}
+                >
+                  <Star
+                    className={`w-4 h-4 ${
+                      state.recipeRatings?.[selectedRecipe.id] ? "text-amber-500 fill-amber-400" : "fill-current"
+                    }`}
+                  />
+                  {state.recipeRatings?.[selectedRecipe.id]
+                    ? `Tu puntuación: ${state.recipeRatings[selectedRecipe.id].stars}/5 (Editar)`
+                    : "¡Ya la cociné! (Puntuar ★)"}
+                </button>
+
+                <button
+                  type="button"
                   onClick={() => {
                     const title = selectedRecipe.title;
                     const country = selectedRecipe.country ? ` (${selectedRecipe.country})` : "";
@@ -736,6 +904,26 @@ export function RecipeBookView({ onAskTutor }: RecipeBookViewProps) {
           recipe={videoRecipe}
           onClose={() => setVideoRecipe(null)}
           onCached={handleVideoCached}
+        />
+      )}
+
+      {/* 5-Star Recipe Rating Modal */}
+      {ratingRecipe && (
+        <RecipeRatingModal
+          recipe={ratingRecipe}
+          existingRating={state.recipeRatings?.[ratingRecipe.id]}
+          isFirstRecipeEver={cookedRecipesCount === 0}
+          onSubmit={(stars, note) => {
+            rateCookedRecipe({
+              recipeId: ratingRecipe.id,
+              recipeTitle: ratingRecipe.title,
+              recipeImage: ratingRecipe.image,
+              stars,
+              note,
+            });
+            setRatingRecipe(null);
+          }}
+          onClose={() => setRatingRecipe(null)}
         />
       )}
     </div>

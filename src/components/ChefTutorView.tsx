@@ -10,6 +10,7 @@ import {
   Send,
   ShieldCheck,
   Sparkles,
+  Star,
   Utensils,
   X,
 } from "lucide-react";
@@ -17,6 +18,7 @@ import { useProgress } from "../context/ProgressContext";
 import { getDishImageForText } from "../data/curriculum";
 import type { Recipe } from "../types/academy";
 import { ChefVideoModal } from "./ChefVideoModal";
+import { RecipeRatingModal } from "./RecipeRatingModal";
 import { SafeImage } from "./SafeImage";
 
 interface ChatMessage {
@@ -274,7 +276,7 @@ function ChefMessageContent({ text }: { text: string }) {
 }
 
 export function ChefTutorView({ initialPrompt, onConsumeInitialPrompt }: ChefTutorViewProps) {
-  const { state, rankTitle } = useProgress();
+  const { state, rankTitle, cookedRecipesCount, rateCookedRecipe } = useProgress();
   const [mode, setMode] = useState<"chat" | "ingredients">("chat");
 
   // Chat state
@@ -282,7 +284,7 @@ export function ChefTutorView({ initialPrompt, onConsumeInitialPrompt }: ChefTut
     {
       id: "welcome",
       role: "assistant",
-      text: `¡Hola ${state.studentName || "Chef"}! Soy **Chef Mentor**, tu profesor virtual de CHEF ACADEMY.\n\n### ¿Cómo te puedo ayudar hoy?\n- **Explicarte recetas paso a paso** en lenguaje fácil.\n- **Aclarar técnicas** (como picar seguro o cocer pasta al dente).\n- **Recomendar platos** según lo que tienes en tu cocina.\n\nEscribe tu duda abajo o elige una idea rápida para empezar.`,
+      text: `¡Hola ${state.studentName || "Chef"}! Soy **Chef Mentor**, tu profesor virtual de CHEF IA.\n\n### ¿Cómo te puedo ayudar hoy?\n- **Explicarte recetas paso a paso** en lenguaje fácil.\n- **Aclarar técnicas** (como picar seguro o cocer pasta al dente).\n- **Recomendar platos** según lo que tienes en tu cocina.\n\nEscribe tu duda abajo o elige una idea rápida para empezar.`,
     },
   ]);
   const [input, setInput] = useState("");
@@ -296,6 +298,7 @@ export function ChefTutorView({ initialPrompt, onConsumeInitialPrompt }: ChefTut
   const [generatedRecipes, setGeneratedRecipes] = useState<GeneratedRecipe[]>([]);
   const [preparedScriptIds, setPreparedScriptIds] = useState<Set<string>>(new Set());
   const [videoRecipe, setVideoRecipe] = useState<Recipe | null>(null);
+  const [ratingRecipe, setRatingRecipe] = useState<Recipe | null>(null);
   const [ingLoading, setIngLoading] = useState(false);
   const [ingError, setIngError] = useState<string | null>(null);
 
@@ -321,19 +324,26 @@ export function ChefTutorView({ initialPrompt, onConsumeInitialPrompt }: ChefTut
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, chatLoading]);
 
-  async function sendChatMessage(textToSend?: string) {
+  async function sendChatMessage(textToSend?: string, retryHistory?: ChatMessage[]) {
+    if (chatLoading) return;
     const clean = (textToSend ?? input).trim();
-    if (!clean || chatLoading) return;
+    if (!retryHistory && !clean) return;
 
-    const userMsg: ChatMessage = {
-      id: `u-${Date.now()}`,
-      role: "user",
-      text: clean,
-    };
+    const nextMessages = retryHistory
+      ? retryHistory
+      : [
+          ...messages,
+          {
+            id: `u-${Date.now()}`,
+            role: "user" as const,
+            text: clean,
+          },
+        ];
 
-    const nextMessages = [...messages, userMsg];
-    setMessages(nextMessages);
-    if (!textToSend) setInput("");
+    if (!retryHistory) {
+      setMessages(nextMessages);
+      if (!textToSend) setInput("");
+    }
     setChatError(null);
     setChatLoading(true);
 
@@ -353,7 +363,13 @@ export function ChefTutorView({ initialPrompt, onConsumeInitialPrompt }: ChefTut
         }),
       });
 
-      const data = (await res.json()) as { reply?: string; error?: string };
+      const rawText = await res.text();
+      let data: { reply?: string; error?: string } = {};
+      try {
+        data = JSON.parse(rawText) as { reply?: string; error?: string };
+      } catch {
+        data = {};
+      }
       if (!res.ok || !data.reply) {
         throw new Error(data.error || "No se pudo obtener respuesta del Profesor IA.");
       }
@@ -491,7 +507,7 @@ export function ChefTutorView({ initialPrompt, onConsumeInitialPrompt }: ChefTut
       </div>
 
       {mode === "chat" ? (
-        <div className="rounded-3xl bg-white border border-sky-200 overflow-hidden flex flex-col min-h-[520px] max-h-[72vh] shadow-sm">
+        <div className="rounded-3xl bg-white border border-sky-200 overflow-hidden flex flex-col h-[calc(100dvh-17rem)] min-h-[420px] max-h-[680px] shadow-sm">
           {/* Quick Prompts */}
           <div className="px-4 sm:px-6 py-3 border-b border-sky-100 bg-sky-50/70 flex items-center gap-2 overflow-x-auto">
             <span className="text-xs font-medium text-slate-500 shrink-0">Ideas rápidas:</span>
@@ -545,9 +561,21 @@ export function ChefTutorView({ initialPrompt, onConsumeInitialPrompt }: ChefTut
             )}
 
             {chatError && (
-              <div className="rounded-xl bg-rose-50 border border-rose-200 text-rose-800 px-4 py-3 text-xs sm:text-sm flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 shrink-0 text-rose-600" />
-                <span>{chatError}</span>
+              <div className="rounded-xl bg-rose-50 border border-rose-200 text-rose-800 px-4 py-3 text-xs sm:text-sm flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 shrink-0 text-rose-600" />
+                  <span>{chatError}</span>
+                </div>
+                {messages[messages.length - 1]?.role === "user" && (
+                  <button
+                    type="button"
+                    disabled={chatLoading}
+                    onClick={() => void sendChatMessage(undefined, messages)}
+                    className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold transition-colors shrink-0"
+                  >
+                    Reintentar
+                  </button>
+                )}
               </div>
             )}
             <div ref={chatEndRef} />
@@ -756,16 +784,31 @@ export function ChefTutorView({ initialPrompt, onConsumeInitialPrompt }: ChefTut
                     {(() => {
                       const mapped = toAcademyRecipe(rec);
                       const isPrepared = preparedScriptIds.has(mapped.id);
+                      const rating = state.recipeRatings?.[mapped.id];
                       return (
-                        <div className="space-y-1.5">
-                          <button
-                            type="button"
-                            onClick={() => setVideoRecipe(mapped)}
-                            className="w-full px-4 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold tracking-wide inline-flex items-center justify-center gap-2 min-h-[42px] transition-colors"
-                          >
-                            <Play className="w-3.5 h-3.5 fill-current" />
-                            VER VIDEO TUTORIAL
-                          </button>
+                        <div className="space-y-2">
+                          <div className="grid sm:grid-cols-2 gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setVideoRecipe(mapped)}
+                              className="w-full px-4 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold tracking-wide inline-flex items-center justify-center gap-2 min-h-[42px] transition-colors"
+                            >
+                              <Play className="w-3.5 h-3.5 fill-current" />
+                              VER VIDEO TUTORIAL
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setRatingRecipe(mapped)}
+                              className={`w-full px-4 py-2.5 rounded-xl text-xs font-semibold inline-flex items-center justify-center gap-1.5 min-h-[42px] border transition-colors ${
+                                rating
+                                  ? "bg-amber-50 hover:bg-amber-100 border-amber-300 text-amber-950"
+                                  : "bg-emerald-50 hover:bg-emerald-100 border-emerald-300 text-emerald-900"
+                              }`}
+                            >
+                              <Star className={`w-3.5 h-3.5 ${rating ? "text-amber-500 fill-amber-400" : "text-emerald-700"}`} />
+                              {rating ? `${rating.stars}/5 ★ (Editar)` : "¡Ya la cociné! (Puntuar)"}
+                            </button>
+                          </div>
                           {isPrepared && (
                             <p className="text-[11px] font-semibold text-emerald-700 inline-flex items-center gap-1">
                               <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
@@ -788,6 +831,25 @@ export function ChefTutorView({ initialPrompt, onConsumeInitialPrompt }: ChefTut
           recipe={videoRecipe}
           onClose={() => setVideoRecipe(null)}
           onCached={handleVideoCached}
+        />
+      )}
+
+      {ratingRecipe && (
+        <RecipeRatingModal
+          recipe={ratingRecipe}
+          existingRating={state.recipeRatings?.[ratingRecipe.id]}
+          isFirstRecipeEver={cookedRecipesCount === 0}
+          onSubmit={(stars, note) => {
+            rateCookedRecipe({
+              recipeId: ratingRecipe.id,
+              recipeTitle: ratingRecipe.title,
+              recipeImage: ratingRecipe.image,
+              stars,
+              note,
+            });
+            setRatingRecipe(null);
+          }}
+          onClose={() => setRatingRecipe(null)}
         />
       )}
     </div>

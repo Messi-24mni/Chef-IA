@@ -5,40 +5,31 @@ import {
   Home,
   Leaf,
   Sparkles,
-  Trophy,
   User,
   UtensilsCrossed,
   X,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { COURSE_LEVELS } from "./data/curriculum";
 import { ProgressProvider, useProgress } from "./context/ProgressContext";
-import type { LevelNumber, TabId } from "./types/academy";
+import type { TabId } from "./types/academy";
 import { HomeView } from "./components/HomeView";
 import { ZeroWasteView } from "./components/ZeroWasteView";
 import { RecipeBookView } from "./components/RecipeBookView";
-import { ChallengesView } from "./components/ChallengesView";
 import { ChefTutorView } from "./components/ChefTutorView";
 import { ProfileView } from "./components/ProfileView";
-import { CertificateModal } from "./components/CertificateModal";
 import { WelcomeOnboardingModal } from "./components/WelcomeOnboardingModal";
 
 const NAV_ITEMS: Array<{ id: TabId; label: string; icon: typeof Home }> = [
   { id: "inicio", label: "Inicio", icon: Home },
   { id: "sin-desperdicio", label: "Sin desperdicio", icon: Leaf },
   { id: "recetario", label: "Recetario", icon: UtensilsCrossed },
-  { id: "desafios", label: "Desafíos", icon: Trophy },
   { id: "chef-ia", label: "Chef IA", icon: Sparkles },
 ];
 
 function AcademyShell() {
   const { state, activeToast, dismissToast } = useProgress();
   const [activeTab, setActiveTab] = useState<TabId>("inicio");
-  const [pendingExamLevel, setPendingExamLevel] = useState<LevelNumber | null>(null);
-  const [certificateLevel, setCertificateLevel] = useState<LevelNumber | null>(null);
   const [tutorInitialPrompt, setTutorInitialPrompt] = useState<string | null>(null);
-
-  const certificateCourse = COURSE_LEVELS.find((l) => l.levelNumber === certificateLevel) ?? null;
 
   const navigateTo = (tab: TabId) => {
     setActiveTab(tab);
@@ -66,7 +57,7 @@ function AcademyShell() {
             </span>
             <div className="flex flex-col">
               <span className="font-display text-base sm:text-lg font-extrabold tracking-tight text-slate-950 leading-none">
-                CHEF ACADEMY
+                CHEF IA
               </span>
               <span className="text-[11px] font-semibold text-sky-700 leading-tight mt-0.5 hidden sm:block">
                 Cocina Sin Desperdicio &amp; Video IA
@@ -133,14 +124,6 @@ function AcademyShell() {
 
             {activeTab === "recetario" && <RecipeBookView onAskTutor={handleAskTutor} />}
 
-            {activeTab === "desafios" && (
-              <ChallengesView
-                initialExamLevel={pendingExamLevel}
-                onConsumeExamLevel={() => setPendingExamLevel(null)}
-                onOpenCertificate={(lvl) => setCertificateLevel(lvl)}
-              />
-            )}
-
             {activeTab === "chef-ia" && (
               <ChefTutorView
                 initialPrompt={tutorInitialPrompt}
@@ -148,9 +131,7 @@ function AcademyShell() {
               />
             )}
 
-            {activeTab === "perfil" && (
-              <ProfileView onOpenCertificate={(lvl) => setCertificateLevel(lvl)} />
-            )}
+            {activeTab === "perfil" && <ProfileView />}
           </motion.div>
         </AnimatePresence>
       </main>
@@ -158,7 +139,7 @@ function AcademyShell() {
       {/* Quiet Desktop Footer */}
       <footer className="hidden lg:block border-t border-sky-200/80 bg-white py-6 text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-8 flex items-center justify-between">
-          <span>CHEF ACADEMY · Cocina Segura, Sin Desperdicio y Video IA (12+)</span>
+          <span>CHEF IA · Cocina Segura, Sin Desperdicio y Video IA (12+)</span>
           <div className="flex items-center gap-6">
             <button
               type="button"
@@ -190,7 +171,7 @@ function AcademyShell() {
         aria-label="Menú inferior de navegación"
         className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-sky-200 pb-safe"
       >
-        <div className="grid grid-cols-5 items-center h-16 max-w-2xl mx-auto px-1">
+        <div className="grid grid-cols-4 items-center h-16 max-w-2xl mx-auto px-1">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             const active = activeTab === item.id;
@@ -244,15 +225,6 @@ function AcademyShell() {
         )}
       </AnimatePresence>
 
-      {/* Official Certificate Modal */}
-      {certificateCourse && (
-        <CertificateModal
-          level={certificateCourse}
-          studentName={state.studentName}
-          scorePercent={state.examScores[certificateCourse.levelNumber] ?? 100}
-          onClose={() => setCertificateLevel(null)}
-        />
-      )}
 
       {/* Initial Student Name & Profile Onboarding */}
       {!state.hasCompletedOnboarding && <WelcomeOnboardingModal />}

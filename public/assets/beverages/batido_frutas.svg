@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FCE7F3"/>
+      <stop offset="100%" stop-color="#E0F2FE"/>
+    </linearGradient>
+    <linearGradient id="smoothie" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#F9A8D4"/>
+      <stop offset="55%" stop-color="#EC4899"/>
+      <stop offset="100%" stop-color="#BE185D"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="600" fill="url(#bg)"/>
+  <ellipse cx="400" cy="512" rx="165" ry="22" fill="#CBD5E1" opacity="0.55"/>
+  <path d="M460 95 L430 120 L388 420" stroke="#0EA5E9" stroke-width="14" stroke-linecap="round" fill="none"/>
+  <path d="M300 175 L500 175 L475 492 Q473 508 455 508 L345 508 Q327 508 325 492 Z" fill="#FFFFFF" fill-opacity="0.6" stroke="#BAE6FD" stroke-width="6"/>
+  <path d="M308 215 L492 215 L470 486 Q468 498 452 498 L348 498 Q332 498 330 486 Z" fill="url(#smoothie)"/>
+  <!-- Yogurt foam top -->
+  <ellipse cx="400" cy="215" rx="92" ry="18" fill="#FFF1F2"/>
+  <!-- Oats / chia / berry toppings -->
+  <circle cx="370" cy="208" r="14" fill="#BE123C"/>
+  <circle cx="405" cy="204" r="12" fill="#4338CA"/>
+  <circle cx="435" cy="210" r="10" fill="#E11D48"/>
+  <ellipse cx="385" cy="218" rx="6" ry="3" fill="#D97706"/>
+  <ellipse cx="418" cy="216" rx="6" ry="3" fill="#D97706"/>
+  <circle cx="355" cy="215" r="3" fill="#334155"/>
+  <circle cx="445" cy="218" r="3" fill="#334155"/>
+  <path d="M322 195 L342 475" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round" opacity="0.4"/>
+</svg>

@@ -2,6 +2,8 @@ import type { MealType, Recipe } from "../types/academy";
 import { getDishImageForText } from "./curriculum";
 import { getOriginalDishTitle } from "./originalDishNames";
 import { RECIPES } from "./recipes";
+import { BEVERAGE_CATEGORIES, BEVERAGE_RECIPES } from "./beverageRecipes";
+import { CAFETERIA_BEVERAGE_RECIPES, CAFETERIA_CATEGORIES } from "./cafeteriaBeverageRecipes";
 import {
   buildYouthPdfChefTip,
   buildYouthPdfDescription,
@@ -85,4 +87,16 @@ export const CURATED_RECIPES: Recipe[] = RECIPES.map((r) => ({
   source: "academia" as const,
 }));
 
-export const ALL_RECIPES: Recipe[] = [...CURATED_RECIPES, ...INTERNATIONAL_RECIPES];
+export {
+  BEVERAGE_CATEGORIES,
+  BEVERAGE_RECIPES,
+  CAFETERIA_BEVERAGE_RECIPES,
+  CAFETERIA_CATEGORIES,
+};
+
+export const ALL_RECIPES: Recipe[] = [
+  ...CURATED_RECIPES,
+  ...INTERNATIONAL_RECIPES,
+  ...BEVERAGE_RECIPES,
+  ...CAFETERIA_BEVERAGE_RECIPES,
+];
